@@ -6,8 +6,21 @@ if (!fs.existsSync(outDir)) {
   fs.mkdirSync(outDir, { recursive: true });
 }
 
+const pkgPath = path.join(__dirname, '..', 'package.json');
+const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+const version = pkg.version;
+const productName = (pkg.build && pkg.build.productName) || pkg.productName || pkg.name;
+
 const GITHUB_REPO = 'https://github.com/alexbieber/bughunter';
 const GITHUB_RELEASES = `${GITHUB_REPO}/releases`;
+// Direct download URLs — work after you create a release and upload these exact asset names
+const DOWNLOAD_BASE = `${GITHUB_RELEASES}/latest/download`;
+const WIN_ASSET = `${productName} Setup ${version}.exe`;
+const MAC_ASSET = `${productName}-${version}.dmg`;
+const LINUX_ASSET = `${productName}-${version}.AppImage`;
+const URL_WIN = `${DOWNLOAD_BASE}/${encodeURIComponent(WIN_ASSET)}`;
+const URL_MAC = `${DOWNLOAD_BASE}/${encodeURIComponent(MAC_ASSET)}`;
+const URL_LINUX = `${DOWNLOAD_BASE}/${encodeURIComponent(LINUX_ASSET)}`;
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -192,7 +205,7 @@ const html = `<!DOCTYPE html>
     }
     .downloads .wrap { text-align: center; }
     .downloads h2 { margin-bottom: 0.5rem; }
-    .downloads .sub { color: var(--text-muted); margin-bottom: 2rem; }
+    .downloads .sub { color: var(--text-muted); margin-bottom: 1.25rem; }
     .download-grid {
       display: flex;
       flex-wrap: wrap;
@@ -266,13 +279,13 @@ const html = `<!DOCTYPE html>
         <h1>One IDE. <span class="accent">80+ tools.</span></h1>
         <p class="tagline">Recon, scanning, and exploitation in one place. Enter a target, pick a tool, run. No need to remember commands.</p>
         <div class="cta-row">
-          <a href="${GITHUB_RELEASES}" class="btn btn-primary">
+          <a href="#download" class="btn btn-primary">
             <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
             Download
           </a>
-          <a href="${GITHUB_REPO}" class="btn btn-secondary">View on GitHub</a>
+          <a href="${GITHUB_REPO}" class="btn btn-secondary">Source on GitHub</a>
         </div>
-        <p class="source-link">Releases · <a href="${GITHUB_REPO}#readme">Build from source</a></p>
+        <p class="source-link">Pick your platform below — installer downloads start immediately.</p>
       </div>
     </section>
 
@@ -315,22 +328,22 @@ const html = `<!DOCTYPE html>
     <section id="download" class="downloads">
       <div class="wrap">
         <h2>Download Bug Bounty IDE</h2>
-        <p class="sub">Pick your platform. Requires Node 18+ to build from source.</p>
+        <p class="sub">Click your platform — the installer will start downloading.</p>
         <div class="download-grid">
-          <a href="${GITHUB_RELEASES}" class="download-btn">
+          <a href="${URL_WIN}" class="download-btn" download>
             <span class="os-icon">🪟</span>
-            <span><strong>Windows</strong><span class="label">Setup.exe · Portable</span></span>
+            <span><strong>Windows</strong><span class="label">Setup.exe · ${version}</span></span>
           </a>
-          <a href="${GITHUB_RELEASES}" class="download-btn">
+          <a href="${URL_MAC}" class="download-btn" download>
             <span class="os-icon">🍎</span>
-            <span><strong>macOS</strong><span class="label">.dmg / .pkg</span></span>
+            <span><strong>macOS</strong><span class="label">.dmg · ${version}</span></span>
           </a>
-          <a href="${GITHUB_RELEASES}" class="download-btn">
+          <a href="${URL_LINUX}" class="download-btn" download>
             <span class="os-icon">🐧</span>
-            <span><strong>Linux</strong><span class="label">AppImage</span></span>
+            <span><strong>Linux</strong><span class="label">AppImage · ${version}</span></span>
           </a>
         </div>
-        <p class="source-link">Releases are published on <a href="${GITHUB_RELEASES}">GitHub Releases</a>. To build locally: <code style="font-family: var(--font-mono); font-size: 0.85em; background: var(--surface); padding: 0.2rem 0.5rem; border-radius: 4px;">npm run build:win</code> / <code style="font-family: var(--font-mono); font-size: 0.85em; background: var(--surface); padding: 0.2rem 0.5rem; border-radius: 4px;">build:mac</code> / <code style="font-family: var(--font-mono); font-size: 0.85em; background: var(--surface); padding: 0.2rem 0.5rem; border-radius: 4px;">build:linux</code></p>
+        <p class="source-link">Or <a href="${GITHUB_RELEASES}">view all releases</a> · <a href="${GITHUB_REPO}#readme">build from source</a></p>
       </div>
     </section>
   </main>

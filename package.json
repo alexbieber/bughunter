@@ -23,6 +23,7 @@
   "build": {
     "appId": "com.bugbounty.ide",
     "productName": "Bug Bounty IDE",
+    "publish": null,
     "directories": { "output": "dist" },
     "files": [
       "main/**",

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; connect-src 'self'" />
+  <title>Bug Bounty IDE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">🛡️</span>
+        <h1>Bug Bounty IDE</h1>
+      </div>
+      <div class="target-wrap">
+        <label for="target">Target (domain or URL)</label>
+        <input id="target" type="text" placeholder="example.com or https://example.com" spellcheck="false" />
+        <button type="button" id="clear-terminal" class="btn btn-ghost" title="Clear terminal">Clear</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <aside class="sidebar">
+        <nav class="nav" id="nav-categories"></nav>
+        <div class="sidebar-footer">
+          <a href="#" id="link-setup">Setup / Install tools</a>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="tools-section" id="tools-section">
+          <div class="tools-bar">
+            <input type="search" id="search" placeholder="Search tools by name or description…" spellcheck="false" />
+            <span class="tool-count" id="tool-count"></span>
+          </div>
+          <p class="placeholder" id="placeholder">Select a category or run a tool.</p>
+          <div class="tool-cards" id="tool-cards"></div>
+        </section>
+
+        <section class="terminal-section">
+          <div class="terminal-header">
+            <span>Terminal</span>
+            <span class="terminal-status" id="terminal-status"></span>
+          </div>
+          <div class="terminal" id="terminal">
+            <pre id="terminal-output"></pre>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-setup" hidden>
+    <div class="modal-content">
+      <h2>Install tools</h2>
+      <p>These CLI tools run on your system. Install the ones you need (Go, Python, or download).</p>
+      <input type="search" id="setup-search" placeholder="Filter install commands…" class="setup-search" spellcheck="false" />
+      <div class="setup-list" id="setup-list"></div>
+      <button type="button" class="btn btn-primary" id="modal-close">Close</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

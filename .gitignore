@@ -1,0 +1,6 @@
+node_modules/
+reports/*.html
+reports/*.json
+reports/*.png
+.env
+.DS_Store

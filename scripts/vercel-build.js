@@ -14,12 +14,12 @@ const GITHUB_REPO = 'https://github.com/alexbieber/bughunter';
 const GITHUB_RELEASES = `${GITHUB_REPO}/releases`;
 const GITHUB_RELEASES_LATEST = `${GITHUB_REPO}/releases/latest`;
 const tag = `v${version}`;
-const enc = (s) => encodeURIComponent(s);
-// Direct download URLs (match electron-builder output filenames)
-const WIN_SETUP_URL = `${GITHUB_REPO}/releases/download/${tag}/${enc(productName + ' Setup ' + version + '.exe')}`;
-const WIN_PORTABLE_URL = `${GITHUB_REPO}/releases/download/${tag}/${enc(productName + ' ' + version + '.exe')}`;
-const MAC_DMG_URL = `${GITHUB_REPO}/releases/download/${tag}/${enc(productName + '-' + version + '.dmg')}`;
-const LINUX_APPIMAGE_URL = `${GITHUB_REPO}/releases/download/${tag}/${enc(productName + '-' + version + '.AppImage')}`;
+// GitHub release assets use dots instead of spaces in filenames (e.g. Bug.Bounty.IDE.Setup.1.0.0.exe)
+const safeName = productName.replace(/\s+/g, '.');
+const WIN_SETUP_URL = `${GITHUB_REPO}/releases/download/${tag}/${safeName}.Setup.${version}.exe`;
+const WIN_PORTABLE_URL = `${GITHUB_REPO}/releases/download/${tag}/${safeName}.${version}.exe`;
+const MAC_DMG_URL = `${GITHUB_REPO}/releases/download/${tag}/${safeName}-${version}-arm64.dmg`;
+const LINUX_APPIMAGE_URL = `${GITHUB_REPO}/releases/download/${tag}/${safeName}-${version}.AppImage`;
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -329,19 +329,19 @@ const html = `<!DOCTYPE html>
         <h2>Download Bug Bounty IDE</h2>
         <p class="sub">Pick your platform. Requires Node 18+ to build from source.</p>
         <div class="download-grid">
-          <a href="${WIN_SETUP_URL}" class="download-btn" download> 
+          <a href="${WIN_SETUP_URL}" class="download-btn" target="_blank" rel="noopener noreferrer">
             <span class="os-icon">🪟</span>
             <span><strong>Windows</strong><span class="label">Setup.exe</span></span>
           </a>
-          <a href="${WIN_PORTABLE_URL}" class="download-btn" download>
+          <a href="${WIN_PORTABLE_URL}" class="download-btn" target="_blank" rel="noopener noreferrer">
             <span class="os-icon">🪟</span>
             <span><strong>Windows Portable</strong><span class="label">.exe (no install)</span></span>
           </a>
-          <a href="${MAC_DMG_URL}" class="download-btn" download>
+          <a href="${MAC_DMG_URL}" class="download-btn" target="_blank" rel="noopener noreferrer">
             <span class="os-icon">🍎</span>
-            <span><strong>macOS</strong><span class="label">.dmg</span></span>
+            <span><strong>macOS</strong><span class="label">.dmg (Apple Silicon)</span></span>
           </a>
-          <a href="${LINUX_APPIMAGE_URL}" class="download-btn" download>
+          <a href="${LINUX_APPIMAGE_URL}" class="download-btn" target="_blank" rel="noopener noreferrer">
             <span class="os-icon">🐧</span>
             <span><strong>Linux</strong><span class="label">.AppImage</span></span>
           </a>

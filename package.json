@@ -12,6 +12,7 @@
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
+    "build:static": "node scripts/vercel-build.js",
     "test:cli": "node src/cli.js"
   },
   "dependencies": {},

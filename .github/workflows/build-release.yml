@@ -21,7 +21,7 @@ jobs:
           cache: 'npm'
 
       - name: Set version from tag
-        run: node -e "const ref=process.env.GITHUB_REF||'';const v=ref.replace(/^refs\\/tags\\/v?/,'');const p=require('./package.json');p.version=v;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
+        run: node -e "const ref=process.env.GITHUB_REF||'';const tag=ref.split('/').pop()||'';const v=tag.startsWith('v')?tag.slice(1):tag;const p=require('./package.json');p.version=v;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
 
       - name: Install dependencies
         run: npm install
@@ -43,7 +43,7 @@ jobs:
           cache: 'npm'
 
       - name: Set version from tag
-        run: node -e "const ref=process.env.GITHUB_REF||'';const v=ref.replace(/^refs\\/tags\\/v?/,'');const p=require('./package.json');p.version=v;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
+        run: node -e "const ref=process.env.GITHUB_REF||'';const tag=ref.split('/').pop()||'';const v=tag.startsWith('v')?tag.slice(1):tag;const p=require('./package.json');p.version=v;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
 
       - name: Accept Xcode license
         run: sudo xcodebuild -license accept
@@ -68,7 +68,7 @@ jobs:
           cache: 'npm'
 
       - name: Set version from tag
-        run: node -e "const ref=process.env.GITHUB_REF||'';const v=ref.replace(/^refs\\/tags\\/v?/,'');const p=require('./package.json');p.version=v;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
+        run: node -e "const ref=process.env.GITHUB_REF||'';const tag=ref.split('/').pop()||'';const v=tag.startsWith('v')?tag.slice(1):tag;const p=require('./package.json');p.version=v;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
 
       - name: Install Linux dependencies for Electron
         run: |

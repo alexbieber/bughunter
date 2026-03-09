@@ -1,7 +1,7 @@
 {
   "name": "bugbounty-ide",
   "productName": "Bug Bounty IDE",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Downloadable IDE for bug hunters — subdomain enum, Nuclei, scanning, exploitation. All tools run in-app.",
   "main": "main/main.js",
   "author": "Bug Bounty IDE",

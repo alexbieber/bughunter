@@ -55,13 +55,25 @@
     </div>
   </div>
 
-  <div class="modal" id="modal-setup" hidden>
+  <div class="modal" id="modal-setup" hidden role="dialog" aria-modal="true" aria-labelledby="modal-setup-title">
     <div class="modal-content">
-      <h2>Install tools</h2>
+      <h2 id="modal-setup-title">Install tools</h2>
       <p>These CLI tools run on your system. Install the ones you need (Go, Python, or download).</p>
       <input type="search" id="setup-search" placeholder="Filter install commands…" class="setup-search" spellcheck="false" />
       <div class="setup-list" id="setup-list"></div>
       <button type="button" class="btn btn-primary" id="modal-close">Close</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-update" hidden role="dialog" aria-modal="true" aria-labelledby="modal-update-title">
+    <div class="modal-content modal-update-content">
+      <h2 id="modal-update-title">Update available</h2>
+      <p id="update-message">A new version of Bug Bounty IDE is available.</p>
+      <div class="modal-update-actions">
+        <button type="button" class="btn btn-primary" id="update-download">Download</button>
+        <button type="button" class="btn btn-primary" id="update-restart" style="display: none;">Restart now</button>
+        <button type="button" class="btn btn-ghost" id="update-later">Later</button>
+      </div>
     </div>
   </div>
 

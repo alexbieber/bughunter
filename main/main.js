@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+const { autoUpdater } = require('electron-updater');
 
 let mainWindow;
 
@@ -20,7 +21,10 @@ function createWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
-  mainWindow.once('ready-to-show', () => mainWindow.show());
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    setupAutoUpdater();
+  });
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -100,6 +104,47 @@ ipcMain.handle('run-command-stream', async (_, { command, cwd, env }) => {
 });
 
 ipcMain.handle('get-app-path', (_, name) => app.getPath(name));
+ipcMain.handle('get-app-version', () => app.getVersion());
+ipcMain.handle('open-external', (_, url) => {
+  if (url && typeof url === 'string') shell.openExternal(url);
+});
+
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
+
+function setupAutoUpdater() {
+  autoUpdater.on('update-available', (info) => {
+    mainWindow?.webContents.send('update-available', {
+      version: info.version,
+      releaseNotes: info.releaseNotes,
+      releaseDate: info.releaseDate,
+    });
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    mainWindow?.webContents.send('update-downloaded', { version: info.version });
+  });
+  autoUpdater.on('download-progress', (progress) => {
+    mainWindow?.webContents.send('update-progress', {
+      percent: progress.percent,
+      transferred: progress.transferred,
+      total: progress.total,
+    });
+  });
+  autoUpdater.on('error', () => {
+    mainWindow?.webContents.send('update-error');
+  });
+  autoUpdater.checkForUpdates().catch(() => {});
+}
+
+ipcMain.handle('update-download', () => {
+  autoUpdater.downloadUpdate().catch(() => {
+    mainWindow?.webContents.send('update-error');
+  });
+});
+ipcMain.handle('update-quit-and-install', () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
 ipcMain.handle('get-tools-config', async () => {
   const fs = require('fs');
   const p = path.join(__dirname, '../tools-config/tools.json');

@@ -412,3 +412,13 @@ body {
 .modal-close {
   margin-top: 8px;
 }
+
+.modal-update-content p {
+  margin-bottom: 20px;
+}
+
+.modal-update-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}

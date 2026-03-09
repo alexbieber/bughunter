@@ -14,6 +14,11 @@
   const setupSearch = $('setup-search');
   const modalClose = $('modal-close');
   const linkSetup = $('link-setup');
+  const modalUpdate = $('modal-update');
+  const updateMessage = $('update-message');
+  const updateDownload = $('update-download');
+  const updateRestart = $('update-restart');
+  const updateLater = $('update-later');
 
   let config = { categories: [], tools: [] };
   let currentCategory = null;
@@ -122,11 +127,12 @@
 
   async function runTool(tool) {
     const targetRaw = targetInput.value.trim();
-    const { domain, url } = normalizeTarget(targetRaw);
+    const { domain } = normalizeTarget(targetRaw);
 
     if (!domain && (tool.command.includes('{{target}}') || tool.command.includes('{{target_url}}'))) {
       appendTerminal('\n[Error] Enter a target domain or URL first.\n', true);
       setStatus('Error: no target', 'error');
+      targetInput.focus();
       return;
     }
 
@@ -136,26 +142,35 @@
 
     toolCards.querySelectorAll('.btn-tool').forEach((b) => (b.disabled = true));
 
+    // Subscribe BEFORE starting the command so we never miss stdout/stderr or "done"
+    if (outputUnsubscribe) outputUnsubscribe();
+    outputUnsubscribe = window.api.onCommandOutput((payload) => {
+      if (payload.type === 'stdout') appendTerminal(payload.data);
+      if (payload.type === 'stderr') appendTerminal(payload.data, true);
+      if (payload.type === 'done') {
+        setStatus(payload.code === 0 ? 'Done' : `Exit ${payload.code}`, payload.code === 0 ? '' : 'error');
+        toolCards.querySelectorAll('.btn-tool').forEach((b) => (b.disabled = false));
+        if (outputUnsubscribe) {
+          outputUnsubscribe();
+          outputUnsubscribe = null;
+        }
+      }
+    });
+
     try {
       await window.api.runCommandStream({
         command,
         cwd: undefined,
         env: {},
       });
-
-      if (outputUnsubscribe) outputUnsubscribe();
-      outputUnsubscribe = window.api.onCommandOutput((payload) => {
-        if (payload.type === 'stdout') appendTerminal(payload.data);
-        if (payload.type === 'stderr') appendTerminal(payload.data, true);
-        if (payload.type === 'done') {
-          setStatus(payload.code === 0 ? 'Done' : `Exit ${payload.code}`, payload.code === 0 ? '' : 'error');
-          toolCards.querySelectorAll('.btn-tool').forEach((b) => (b.disabled = false));
-        }
-      });
     } catch (err) {
       appendTerminal(err.message + '\n', true);
       setStatus('Error', 'error');
       toolCards.querySelectorAll('.btn-tool').forEach((b) => (b.disabled = false));
+      if (outputUnsubscribe) {
+        outputUnsubscribe();
+        outputUnsubscribe = null;
+      }
     }
   }
 
@@ -200,6 +215,58 @@
     if (e.target === modalSetup) modalSetup.hidden = true;
   });
 
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!modalSetup.hidden) modalSetup.hidden = true;
+    if (!modalUpdate.hidden) modalUpdate.hidden = true;
+  });
+
+  function showUpdateAvailable(version) {
+    updateMessage.textContent = `A new version (v${version}) is available. Download and install now?`;
+    updateDownload.textContent = 'Download';
+    updateDownload.style.display = '';
+    updateDownload.disabled = false;
+    updateRestart.style.display = 'none';
+    modalUpdate.hidden = false;
+  }
+  function showUpdateDownloading(percent) {
+    updateMessage.textContent = `Downloading update… ${Math.round(percent || 0)}%`;
+    updateDownload.disabled = true;
+  }
+  function showUpdateReady(version) {
+    updateMessage.textContent = `Update v${version} ready. Restart now to install.`;
+    updateDownload.style.display = 'none';
+    updateRestart.style.display = '';
+  }
+
+  window.api.onUpdateAvailable((info) => {
+    showUpdateAvailable(info.version || '');
+  });
+  window.api.onUpdateDownloaded((info) => {
+    showUpdateReady(info.version || '');
+  });
+  window.api.onUpdateProgress((p) => {
+    showUpdateDownloading(p.percent);
+  });
+  window.api.onUpdateError(() => {
+    updateMessage.textContent = 'Update failed. You can download the latest version from the releases page.';
+    updateDownload.style.display = 'none';
+    updateRestart.style.display = 'none';
+  });
+
+  updateDownload.addEventListener('click', () => {
+    window.api.downloadUpdate();
+  });
+  updateRestart.addEventListener('click', () => {
+    window.api.quitAndInstall();
+  });
+  updateLater.addEventListener('click', () => {
+    modalUpdate.hidden = true;
+  });
+  modalUpdate.addEventListener('click', (e) => {
+    if (e.target === modalUpdate) modalUpdate.hidden = true;
+  });
+
   async function init() {
     try {
       config = await window.api.getToolsConfig();
@@ -226,6 +293,10 @@
       }
     }
     renderTools();
+    if (!config.categories.length && !config.tools.length) {
+      placeholder.textContent = 'Could not load tools. Check that tools-config/tools.json exists.';
+      placeholder.hidden = false;
+    }
 
     searchInput.addEventListener('input', () => {
       searchQuery = searchInput.value.trim();

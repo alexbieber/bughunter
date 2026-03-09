@@ -1,11 +1,14 @@
 {
   "name": "bugbounty-ide",
   "productName": "Bug Bounty IDE",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Downloadable IDE for bug hunters — subdomain enum, Nuclei, scanning, exploitation. All tools run in-app.",
   "main": "main/main.js",
   "author": "Bug Bounty IDE",
-  "repository": { "type": "git", "url": "https://github.com/alexbieber/bughunter" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexbieber/bughunter"
+  },
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -32,7 +35,9 @@
       "owner": "alexbieber",
       "repo": "bughunter"
     },
-    "directories": { "output": "dist" },
+    "directories": {
+      "output": "dist"
+    },
     "files": [
       "main/**",
       "renderer/**",
@@ -40,14 +45,25 @@
       "src/**"
     ],
     "win": {
-      "target": ["nsis", "portable"]
+      "target": [
+        "nsis",
+        "portable"
+      ]
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     },
-    "mac": { "category": "public.app-category.developer-tools" },
-    "linux": { "target": ["AppImage"] }
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

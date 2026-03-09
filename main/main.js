@@ -1,7 +1,27 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
+const https = require('https');
 const { spawn } = require('child_process');
 const { autoUpdater } = require('electron-updater');
+
+const GITHUB_REPO = 'alexbieber/bughunter';
+
+function parseVersion(v) {
+  const s = String(v || '').replace(/^v/, '').trim();
+  return s.split('.').map((n) => parseInt(n, 10) || 0);
+}
+
+function isNewer(latest, current) {
+  const a = parseVersion(latest);
+  const b = parseVersion(current);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const x = a[i] || 0;
+    const y = b[i] || 0;
+    if (x > y) return true;
+    if (x < y) return false;
+  }
+  return false;
+}
 
 let mainWindow;
 
@@ -143,6 +163,45 @@ ipcMain.handle('update-download', () => {
 });
 ipcMain.handle('update-quit-and-install', () => {
   autoUpdater.quitAndInstall(false, true);
+});
+
+// Fallback: check GitHub API when electron-updater doesn't find an update (e.g. missing latest.yml)
+ipcMain.handle('check-for-updates-fallback', () => {
+  const current = app.getVersion();
+  return new Promise((resolve) => {
+    const req = https.get(
+      `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
+      { headers: { 'User-Agent': 'BugBountyIDE-Updater' } },
+      (res) => {
+        if (res.statusCode !== 200) {
+          resolve({ available: false });
+          return;
+        }
+        let body = '';
+        res.on('data', (chunk) => (body += chunk));
+        res.on('end', () => {
+          try {
+            const data = JSON.parse(body);
+            const tag = (data.tag_name || '').trim();
+            const version = tag.replace(/^v/, '');
+            const releaseUrl = data.html_url || `https://github.com/${GITHUB_REPO}/releases/latest`;
+            if (version && isNewer(version, current)) {
+              resolve({ available: true, version, releaseUrl });
+            } else {
+              resolve({ available: false });
+            }
+          } catch (_) {
+            resolve({ available: false });
+          }
+        });
+      }
+    );
+    req.on('error', () => resolve({ available: false }));
+    req.setTimeout(10000, () => {
+      req.destroy();
+      resolve({ available: false });
+    });
+  });
 });
 
 ipcMain.handle('get-tools-config', async () => {

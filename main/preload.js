@@ -34,4 +34,5 @@ contextBridge.exposeInMainWorld('api', {
   },
   downloadUpdate: () => ipcRenderer.invoke('update-download'),
   quitAndInstall: () => ipcRenderer.invoke('update-quit-and-install'),
+  checkForUpdatesFallback: () => ipcRenderer.invoke('check-for-updates-fallback'),
 });

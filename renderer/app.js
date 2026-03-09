@@ -221,8 +221,14 @@
     if (!modalUpdate.hidden) modalUpdate.hidden = true;
   });
 
-  function showUpdateAvailable(version) {
-    updateMessage.textContent = `A new version (v${version}) is available. Download and install now?`;
+  let updateFromElectronUpdater = false;
+  let pendingReleaseUrl = '';
+
+  function showUpdateAvailable(version, fromFallback) {
+    updateFromElectronUpdater = !fromFallback;
+    updateMessage.textContent = fromFallback
+      ? `A new version (v${version}) is available. Download from the releases page.`
+      : `A new version (v${version}) is available. Download and install now?`;
     updateDownload.textContent = 'Download';
     updateDownload.style.display = '';
     updateDownload.disabled = false;
@@ -240,7 +246,8 @@
   }
 
   window.api.onUpdateAvailable((info) => {
-    showUpdateAvailable(info.version || '');
+    pendingReleaseUrl = '';
+    showUpdateAvailable(info.version || '', false);
   });
   window.api.onUpdateDownloaded((info) => {
     showUpdateReady(info.version || '');
@@ -255,6 +262,11 @@
   });
 
   updateDownload.addEventListener('click', () => {
+    if (pendingReleaseUrl) {
+      window.api.openExternal(pendingReleaseUrl);
+      modalUpdate.hidden = true;
+      return;
+    }
     window.api.downloadUpdate();
   });
   updateRestart.addEventListener('click', () => {
@@ -266,6 +278,18 @@
   modalUpdate.addEventListener('click', (e) => {
     if (e.target === modalUpdate) modalUpdate.hidden = true;
   });
+
+  // Fallback: if electron-updater didn't find an update, check GitHub API after 3.5s
+  setTimeout(async () => {
+    if (updateFromElectronUpdater) return;
+    try {
+      const result = await window.api.checkForUpdatesFallback();
+      if (result && result.available && result.version && result.releaseUrl) {
+        pendingReleaseUrl = result.releaseUrl;
+        showUpdateAvailable(result.version, true);
+      }
+    } catch (_) {}
+  }, 3500);
 
   async function init() {
     try {

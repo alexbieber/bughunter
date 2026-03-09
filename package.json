@@ -14,7 +14,8 @@
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
     "build:static": "node scripts/vercel-build.js",
-    "test:cli": "node src/cli.js"
+    "test:cli": "node src/cli.js",
+    "release": "npm version patch -m \"Release v%s\" && git push && git push --tags"
   },
   "dependencies": {
     "electron-updater": "^6.3.9"

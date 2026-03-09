@@ -1,5 +1,5 @@
 # Build installable Bug Bounty IDE on release.
-# Push a tag like v1.0.0 to trigger; installers are uploaded to the release.
+# Push a tag like v1.0.1 to trigger; version in package.json is set from the tag, then installers are uploaded.
 name: Build release
 
 on:
@@ -18,6 +18,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Set version from tag
+        run: node -e "const ref=process.env.GITHUB_REF||'';const v=ref.replace(/^refs\\/tags\\/v?/,'');const p=require('./package.json');p.version=v;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
 
       - name: Install dependencies
         run: npm install
@@ -43,6 +46,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Set version from tag
+        run: node -e "const ref=process.env.GITHUB_REF||'';const v=ref.replace(/^refs\\/tags\\/v?/,'');const p=require('./package.json');p.version=v;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
 
       - name: Accept Xcode license
         run: sudo xcodebuild -license accept
@@ -72,6 +78,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Set version from tag
+        run: node -e "const ref=process.env.GITHUB_REF||'';const v=ref.replace(/^refs\\/tags\\/v?/,'');const p=require('./package.json');p.version=v;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2));"
 
       - name: Install Linux dependencies for Electron
         run: |

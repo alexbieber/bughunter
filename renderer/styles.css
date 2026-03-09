@@ -63,12 +63,30 @@ body {
   font-weight: 600;
 }
 
+.header-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-basis: 100%;
+  padding-left: 0;
+}
+
+.header-hint a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.header-hint a:hover {
+  text-decoration: underline;
+}
+
 .target-wrap {
   display: flex;
   align-items: center;
   gap: 10px;
   flex: 1;
-  max-width: 560px;
+  max-width: 720px;
+  flex-wrap: wrap;
 }
 
 .target-wrap label {

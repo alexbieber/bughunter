@@ -19,9 +19,11 @@
       </div>
       <div class="target-wrap">
         <label for="target">Target (domain or URL)</label>
-        <input id="target" type="text" placeholder="example.com or https://example.com" spellcheck="false" />
+        <input id="target" type="text" placeholder="Paste domain, e.g. example.com" spellcheck="false" />
+        <button type="button" id="run-quick-recon" class="btn btn-primary" title="Run all tools that use the target domain/URL">Run all tools</button>
         <button type="button" id="clear-terminal" class="btn btn-ghost" title="Clear terminal">Clear</button>
       </div>
+      <p class="header-hint">Tools run on your PC. Install the ones you need via <a href="#" id="link-setup-header">Setup / Install tools</a> (sidebar).</p>
     </header>
 
     <div class="content">
@@ -58,7 +60,7 @@
   <div class="modal" id="modal-setup" hidden role="dialog" aria-modal="true" aria-labelledby="modal-setup-title">
     <div class="modal-content">
       <h2 id="modal-setup-title">Install tools</h2>
-      <p>These CLI tools run on your system. Install the ones you need (Go, Python, or download).</p>
+      <p>This app runs tools on your computer—it does not bundle them. Install the tools you want (Go, Python, or download from the links below), then run them from the app.</p>
       <input type="search" id="setup-search" placeholder="Filter install commands…" class="setup-search" spellcheck="false" />
       <div class="setup-list" id="setup-list"></div>
       <button type="button" class="btn btn-primary" id="modal-close">Close</button>

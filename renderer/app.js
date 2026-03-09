@@ -14,6 +14,7 @@
   const setupSearch = $('setup-search');
   const modalClose = $('modal-close');
   const linkSetup = $('link-setup');
+  const runQuickReconBtn = $('run-quick-recon');
   const modalUpdate = $('modal-update');
   const updateMessage = $('update-message');
   const updateDownload = $('update-download');
@@ -24,6 +25,9 @@
   let currentCategory = null;
   let searchQuery = '';
   let outputUnsubscribe = null;
+  let workflowQueue = [];
+  let workflowTotal = 0;
+  let workflowOnDone = null;
 
   function normalizeTarget(raw) {
     const t = (raw || '').trim();
@@ -125,7 +129,12 @@
     setStatus('');
   }
 
-  async function runTool(tool) {
+  function reenableToolButtons() {
+    toolCards.querySelectorAll('.btn-tool').forEach((b) => (b.disabled = false));
+    runQuickReconBtn.disabled = false;
+  }
+
+  async function runTool(tool, onDoneFromWorkflow) {
     const targetRaw = targetInput.value.trim();
     const { domain } = normalizeTarget(targetRaw);
 
@@ -133,14 +142,17 @@
       appendTerminal('\n[Error] Enter a target domain or URL first.\n', true);
       setStatus('Error: no target', 'error');
       targetInput.focus();
+      if (onDoneFromWorkflow) workflowOnDone && workflowOnDone();
       return;
     }
 
     const command = substituteCommand(tool.command, targetRaw);
     appendTerminal(`\n$ ${command}\n`);
-    setStatus('Running…', 'running');
+    const stepLabel = workflowTotal ? `(${workflowTotal - workflowQueue.length + 1}/${workflowTotal}) ${tool.name} — ` : '';
+    setStatus(stepLabel + 'Running…', 'running');
 
     toolCards.querySelectorAll('.btn-tool').forEach((b) => (b.disabled = true));
+    if (onDoneFromWorkflow) runQuickReconBtn.disabled = true;
 
     // Subscribe BEFORE starting the command so we never miss stdout/stderr or "done"
     if (outputUnsubscribe) outputUnsubscribe();
@@ -148,11 +160,15 @@
       if (payload.type === 'stdout') appendTerminal(payload.data);
       if (payload.type === 'stderr') appendTerminal(payload.data, true);
       if (payload.type === 'done') {
-        setStatus(payload.code === 0 ? 'Done' : `Exit ${payload.code}`, payload.code === 0 ? '' : 'error');
-        toolCards.querySelectorAll('.btn-tool').forEach((b) => (b.disabled = false));
-        if (outputUnsubscribe) {
-          outputUnsubscribe();
-          outputUnsubscribe = null;
+        if (onDoneFromWorkflow && workflowOnDone) {
+          workflowOnDone();
+        } else {
+          setStatus(payload.code === 0 ? 'Done' : `Exit ${payload.code}`, payload.code === 0 ? '' : 'error');
+          reenableToolButtons();
+          if (outputUnsubscribe) {
+            outputUnsubscribe();
+            outputUnsubscribe = null;
+          }
         }
       }
     });
@@ -166,13 +182,55 @@
     } catch (err) {
       appendTerminal(err.message + '\n', true);
       setStatus('Error', 'error');
-      toolCards.querySelectorAll('.btn-tool').forEach((b) => (b.disabled = false));
+      reenableToolButtons();
       if (outputUnsubscribe) {
         outputUnsubscribe();
         outputUnsubscribe = null;
       }
+      if (onDoneFromWorkflow && workflowOnDone) workflowOnDone();
     }
   }
+
+  function runNextInWorkflow() {
+    if (workflowQueue.length === 0) {
+      setStatus(`All ${workflowTotal} tools done`, '');
+      reenableToolButtons();
+      if (outputUnsubscribe) {
+        outputUnsubscribe();
+        outputUnsubscribe = null;
+      }
+      return;
+    }
+    const tool = workflowQueue.shift();
+    runTool(tool, true);
+  }
+
+  function runQuickRecon() {
+    const targetRaw = targetInput.value.trim();
+    const { domain } = normalizeTarget(targetRaw);
+    if (!domain) {
+      appendTerminal('\n[Error] Paste a domain or URL first (e.g. example.com).\n', true);
+      setStatus('Error: no target', 'error');
+      targetInput.focus();
+      return;
+    }
+    // All tools that take {{target}} or {{target_url}}
+    workflowQueue = config.tools.filter(
+      (t) => t.command && (t.command.includes('{{target}}') || t.command.includes('{{target_url}}'))
+    );
+    workflowTotal = workflowQueue.length;
+    workflowOnDone = runNextInWorkflow;
+    appendTerminal(`\n--- Running all ${workflowTotal} tools for ${domain} ---\n`);
+    runNextInWorkflow();
+  }
+
+  runQuickReconBtn.addEventListener('click', runQuickRecon);
+  targetInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      runQuickRecon();
+    }
+  });
 
   clearBtn.addEventListener('click', clearTerminal);
 
@@ -198,12 +256,17 @@
       .join('');
   }
 
-  linkSetup.addEventListener('click', (e) => {
-    e.preventDefault();
+  function openSetupModal() {
     setupSearch.value = '';
     renderSetupList('');
     modalSetup.hidden = false;
+  }
+  linkSetup.addEventListener('click', (e) => {
+    e.preventDefault();
+    openSetupModal();
   });
+  const linkSetupHeader = $('link-setup-header');
+  if (linkSetupHeader) linkSetupHeader.addEventListener('click', (e) => { e.preventDefault(); openSetupModal(); });
 
   setupSearch.addEventListener('input', () => renderSetupList(setupSearch.value.trim()));
 
